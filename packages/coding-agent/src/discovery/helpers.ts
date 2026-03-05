@@ -8,6 +8,7 @@ import { readFile } from "../capability/fs";
 import { parseRuleConditionAndScope, type Rule, type RuleFrontmatter } from "../capability/rule";
 import type { Skill, SkillFrontmatter } from "../capability/skill";
 import type { LoadContext, LoadResult, SourceMeta } from "../capability/types";
+import { normalizeAndDedupeToolNames } from "../tools/tool-names";
 import { parseFrontmatter } from "../utils/frontmatter";
 
 /**
@@ -207,6 +208,9 @@ export function parseAgentFields(frontmatter: Record<string, unknown>): ParsedAg
 	}
 
 	let tools = parseArrayOrCSV(frontmatter.tools);
+	if (tools) {
+		tools = normalizeAndDedupeToolNames(tools);
+	}
 
 	// Subagents with explicit tool lists always need submit_result
 	if (tools && !tools.includes("submit_result")) {

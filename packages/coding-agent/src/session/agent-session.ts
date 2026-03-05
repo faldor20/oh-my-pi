@@ -98,6 +98,7 @@ import type { CheckpointState } from "../tools/checkpoint";
 import { outputMeta } from "../tools/output-meta";
 import { resolveToCwd } from "../tools/path-utils";
 import type { PendingActionStore } from "../tools/pending-action";
+import { normalizeToolName } from "../tools/tool-names";
 import { getLatestTodoPhasesFromEntries, type TodoItem, type TodoPhase } from "../tools/todo-write";
 import { parseCommandArgs } from "../utils/command-args";
 import { resolveFileDisplayMode } from "../utils/file-display-mode";
@@ -1591,11 +1592,19 @@ export class AgentSession {
 	async setActiveToolsByName(toolNames: string[]): Promise<void> {
 		const tools: AgentTool[] = [];
 		const validToolNames: string[] = [];
+		const seen = new Set<string>();
+		const registryNameByNormalized = new Map<string, string>();
+		for (const name of this.#toolRegistry.keys()) {
+			registryNameByNormalized.set(normalizeToolName(name), name);
+		}
 		for (const name of toolNames) {
-			const tool = this.#toolRegistry.get(name);
+			const canonicalName = registryNameByNormalized.get(normalizeToolName(name));
+			if (!canonicalName || seen.has(canonicalName)) continue;
+			seen.add(canonicalName);
+			const tool = this.#toolRegistry.get(canonicalName);
 			if (tool) {
 				tools.push(tool);
-				validToolNames.push(name);
+				validToolNames.push(canonicalName);
 			}
 		}
 		this.agent.setTools(tools);

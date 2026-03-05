@@ -96,6 +96,7 @@ import { ToolContextStore } from "./tools/context";
 import { getGeminiImageTools } from "./tools/gemini-image";
 import { wrapToolWithMetaNotice } from "./tools/output-meta";
 import { PendingActionStore } from "./tools/pending-action";
+import { normalizeAndDedupeToolNames } from "./tools/tool-names";
 import { EventBus } from "./utils/event-bus";
 
 // Types
@@ -824,12 +825,13 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 		: undefined;
 
 	const pendingActionStore = new PendingActionStore();
+	const normalizedOptionToolNames = options.toolNames ? normalizeAndDedupeToolNames(options.toolNames) : undefined;
 	const toolSession: ToolSession = {
 		cwd,
 		hasUI: options.hasUI ?? false,
 		enableLsp,
 		get hasEditTool() {
-			return !options.toolNames || options.toolNames.includes("edit");
+			return !normalizedOptionToolNames || normalizedOptionToolNames.includes("edit");
 		},
 		skipPythonPreflight: options.skipPythonPreflight,
 		contextFiles,
@@ -906,7 +908,7 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 	);
 
 	// Create built-in tools (already wrapped with meta notice formatting)
-	const builtinTools = await logger.timeAsync("createAllTools", () => createTools(toolSession, options.toolNames));
+	const builtinTools = await logger.timeAsync("createAllTools", () => createTools(toolSession, normalizedOptionToolNames));
 
 	// Discover MCP tools from .mcp.json files
 	let mcpManager: MCPManager | undefined;
@@ -1246,9 +1248,9 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 	};
 
 	const toolNamesFromRegistry = Array.from(toolRegistry.keys());
-	const requestedToolNames = options.toolNames ?? toolNamesFromRegistry;
+	const requestedToolNames = normalizedOptionToolNames ?? toolNamesFromRegistry;
 	const normalizedRequested = requestedToolNames.filter(name => toolRegistry.has(name));
-	const includeExitPlanMode = options.toolNames?.includes("exit_plan_mode") ?? false;
+	const includeExitPlanMode = normalizedOptionToolNames?.includes("exit_plan_mode") ?? false;
 	const initialToolNames = includeExitPlanMode
 		? normalizedRequested
 		: normalizedRequested.filter(name => name !== "exit_plan_mode");

@@ -470,7 +470,7 @@ async function executeToolCalls(
 
 	const records = toolCalls.map(toolCall => ({
 		toolCall,
-		tool: tools?.find(t => t.name === toolCall.name),
+		tool: tools?.find(t => t.name.toLowerCase() === toolCall.name.toLowerCase()),
 		args: toolCall.arguments as Record<string, unknown>,
 		started: false,
 		result: undefined as AgentToolResult<any> | undefined,

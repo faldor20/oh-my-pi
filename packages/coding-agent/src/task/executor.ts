@@ -27,6 +27,7 @@ import { SessionManager } from "../session/session-manager";
 import { type ContextFileEntry, truncateTail } from "../tools";
 import { jtdToJsonSchema } from "../tools/jtd-to-json-schema";
 import { ToolAbortError } from "../tools/tool-errors";
+import { normalizeAndDedupeToolNames } from "../tools/tool-names";
 import type { EventBus } from "../utils/event-bus";
 import { subprocessToolRegistry } from "./subprocess-tool-registry";
 import {
@@ -526,7 +527,7 @@ export async function runSubprocess(options: ExecutorOptions): Promise<SingleRes
 	// Add tools if specified
 	let toolNames: string[] | undefined;
 	if (agent.tools && agent.tools.length > 0) {
-		toolNames = agent.tools;
+		toolNames = normalizeAndDedupeToolNames(agent.tools);
 		// Auto-include task tool if spawns defined but task not in tools
 		if (agent.spawns !== undefined && !toolNames.includes("task") && !atMaxDepth) {
 			toolNames = [...toolNames, "task"];
