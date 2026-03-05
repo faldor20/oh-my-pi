@@ -199,6 +199,11 @@ describe("parseArgs", () => {
 			expect(result.noTools).toBe(true);
 			expect(result.tools).toEqual(["read", "bash"]);
 		});
+
+		test("parses --tools names case-insensitively", () => {
+			const result = parseArgs(["--tools", "READ,Bash"]);
+			expect(result.tools).toEqual(["read", "bash"]);
+		});
 	});
 
 	describe("--no-lsp flag", () => {

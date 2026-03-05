@@ -55,4 +55,15 @@ describe("parseAgentFields", () => {
 
 		expect(fields?.thinkingLevel).toBe("high");
 	});
+
+	test("normalizes tools case-insensitively", () => {
+		const fields = parseAgentFields({
+			name: "reviewer",
+			description: "desc",
+			tools: ["READ", "Task"],
+		});
+
+		expect(fields?.tools).toEqual(["read", "task", "submit_result"]);
+		expect(fields?.spawns).toBe("*");
+	});
 });

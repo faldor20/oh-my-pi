@@ -5,6 +5,7 @@ import { getAvailableThinkingLevels, parseThinkingLevel, type ThinkingLevel } fr
 import { APP_NAME, CONFIG_DIR_NAME, logger } from "@oh-my-pi/pi-utils";
 import chalk from "chalk";
 import { BUILTIN_TOOLS } from "../tools";
+import { normalizeAndDedupeToolNames } from "../tools/tool-names";
 
 export type Mode = "text" | "json" | "rpc";
 
@@ -107,7 +108,7 @@ export function parseArgs(args: string[], extensionFlags?: Map<string, { type: "
 		} else if (arg === "--no-pty") {
 			result.noPty = true;
 		} else if (arg === "--tools" && i + 1 < args.length) {
-			const toolNames = args[++i].split(",").map(s => s.trim());
+			const toolNames = normalizeAndDedupeToolNames(args[++i].split(","));
 			const validTools: string[] = [];
 			for (const name of toolNames) {
 				if (name in BUILTIN_TOOLS) {

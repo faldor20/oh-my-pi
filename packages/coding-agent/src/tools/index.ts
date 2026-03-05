@@ -36,6 +36,7 @@ import { ResolveTool } from "./resolve";
 import { reportFindingTool } from "./review";
 import { loadSshTool } from "./ssh";
 import { SubmitResultTool } from "./submit-result";
+import { normalizeAndDedupeToolNames } from "./tool-names";
 import { type TodoPhase, TodoWriteTool } from "./todo-write";
 import { WriteTool } from "./write";
 
@@ -71,6 +72,7 @@ export * from "./resolve";
 export * from "./review";
 export * from "./ssh";
 export * from "./submit-result";
+export * from "./tool-names";
 export * from "./todo-write";
 export * from "./write";
 
@@ -227,7 +229,8 @@ function getPythonModeFromEnv(): PythonToolMode | null {
 export async function createTools(session: ToolSession, toolNames?: string[]): Promise<Tool[]> {
 	const includeSubmitResult = session.requireSubmitResultTool === true;
 	const enableLsp = session.enableLsp ?? true;
-	const requestedTools = toolNames && toolNames.length > 0 ? [...new Set(toolNames)] : undefined;
+	const requestedTools =
+		toolNames && toolNames.length > 0 ? normalizeAndDedupeToolNames(toolNames) : undefined;
 	if (requestedTools && !requestedTools.includes("exit_plan_mode")) {
 		requestedTools.push("exit_plan_mode");
 	}
