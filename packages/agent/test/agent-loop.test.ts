@@ -371,6 +371,61 @@ describe("agentLoop with AgentMessage", () => {
 		}
 	});
 
+	it("matches tool names case-insensitively", async () => {
+		const toolSchema = Type.Object({ value: Type.String() });
+		const executed: string[] = [];
+		const tool: AgentTool<typeof toolSchema, { value: string }> = {
+			name: "echo",
+			label: "Echo",
+			description: "Echo tool",
+			parameters: toolSchema,
+			async execute(_toolCallId, params) {
+				executed.push(params.value);
+				return {
+					content: [{ type: "text", text: `echoed: ${params.value}` }],
+					details: { value: params.value },
+				};
+			},
+		};
+
+		const context: AgentContext = {
+			systemPrompt: "",
+			messages: [],
+			tools: [tool],
+		};
+
+		const config: AgentLoopConfig = {
+			model: createModel(),
+			convertToLlm: identityConverter,
+		};
+
+		let callIndex = 0;
+		const streamFn = () => {
+			const stream = new MockAssistantStream();
+			queueMicrotask(() => {
+				if (callIndex === 0) {
+					const message = createAssistantMessage(
+						[{ type: "toolCall", id: "tool-1", name: "ECHO", arguments: { value: "hello" } }],
+						"toolUse",
+					);
+					stream.push({ type: "done", reason: "toolUse", message });
+				} else {
+					const message = createAssistantMessage([{ type: "text", text: "done" }]);
+					stream.push({ type: "done", reason: "stop", message });
+				}
+				callIndex++;
+			});
+			return stream;
+		};
+
+		const stream = agentLoop([createUserMessage("echo something")], context, config, undefined, streamFn);
+		for await (const _ of stream) {
+			// consume
+		}
+
+		expect(executed).toEqual(["hello"]);
+	});
+
 	it("injects and strips intent when intent tracing is enabled", async () => {
 		const toolSchema = Type.Object({ value: Type.String() });
 		const executedParams: Record<string, unknown>[] = [];

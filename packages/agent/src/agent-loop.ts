@@ -470,7 +470,7 @@ async function executeToolCalls(
 
 	const records = toolCalls.map(toolCall => ({
 		toolCall,
-		tool: tools?.find(t => t.name === toolCall.name),
+		tool: tools?.find(t => t.name.localeCompare(toolCall.name, undefined, { sensitivity: "accent" }) === 0),
 		args: toolCall.arguments as Record<string, unknown>,
 		started: false,
 		result: undefined as AgentToolResult<any> | undefined,
